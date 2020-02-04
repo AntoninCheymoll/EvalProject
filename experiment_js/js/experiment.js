@@ -17,6 +17,49 @@ var ctx = {
   trialNb: 0,
 };
 
+var showIntertitle = function() {
+
+  d3.select("#instructions")
+    .append('p')
+    .classed('instr', true)
+    .html("Multiple shapes will get displayed.<br> Only <b>one shape</b> is different from all other shapes.");
+
+  d3.select("#instructions")
+    .append('p')
+    .classed('instr', true)
+    .html("1. Spot it as fast as possible and press <code>Space</code> bar;");
+
+  d3.select("#instructions")
+    .append('p')
+    .classed('instr', true)
+    .html("2. Click on the placeholder over that shape.");
+
+  d3.select("#instructions")
+    .append('p')
+    .classed('instr', true)
+    .html("Press <code>GO</code> when ready to start.");
+
+}
+
+var startTime, interval, spottingTime;
+
+document.addEventListener('keydown', function(event) {
+
+  if(event.keyCode == 32) {
+    event.preventDefault();
+    
+    console.log(spottingTime);
+  }
+
+  d3.selectAll("rect")
+    .transition()
+    .attr("rx",0)
+    .attr("ry",0)
+    .attr("width", 30)
+    .attr("height", 30)
+    .style("fill", "white");
+});
+
 var nextTrial = function() {
 
   let trial = ctx.trials[ctx.trialNb];
@@ -98,16 +141,19 @@ var nextTrial = function() {
     .attr("y", y)
     .attr("id","uniqCircle");
 
-  var startTime, interval;
-  startTime = Date.now();
-  interval = setInterval(function() {
-    var elapsedTime = Date.now() - startTime;
-    document.getElementById("timer").innerHTML = (elapsedTime / 1000).toFixed(3);
-  }, 10000);
+    startTime = Date.now();
+    interval = setInterval(function() {
+      var elapsedTime = Date.now() - startTime;
+      spottingTime = (elapsedTime / 1000);
+    }, 100);
+  
 }
 
 var startExperiment = function(event) {
   event.preventDefault();
+  
+  d3.selectAll('.instr').remove();
+
 
   for(var i = 0; i < ctx.trials.length; i++) {
     if(ctx.trials[i][ctx.participantIndex] === ctx.participant) {
