@@ -15,7 +15,25 @@ var ctx = {
   objectsCountIndex:"O",
 
   trialNb: 0,
+  errorNb: 0,
+  participantNb: 0,
+  startTime: 0,
+  trialTime: -1,
+  csvFile: "",
 };
+
+var showEndMessage = function() {
+
+  d3.select("#instructions")
+    .append('p')
+    .classed('instr', true)
+    .html("The experiment is over,");
+
+  d3.select("#instructions")
+    .append('p')
+    .classed('instr', true)
+    .html("thank you for your participation !");
+}
 
 var showIntertitle = function() {
 
@@ -38,7 +56,6 @@ var showIntertitle = function() {
     .append('p')
     .classed('instr', true)
     .html("Press <code>GO</code> when ready to start.");
-
 }
 
 var startTime, interval, spottingTime;
@@ -47,113 +64,167 @@ document.addEventListener('keydown', function(event) {
 
   if(event.keyCode == 32) {
     event.preventDefault();
-    
-    console.log(spottingTime);
+
+    if (ctx.trialTime === 0){
+      ctx.trialTime = Date.now() - ctx.startTime;
+    }
+
+    d3.selectAll("rect")
+      .transition()
+      .attr("rx",0)
+      .attr("ry",0)
+      .attr("width", 30)
+      .attr("height", 30)
+      .style("fill", "white");
+
+    function clicked(d,i) {
+
+      if(d3.select(this).attr("id") === "uniqCircle"){
+
+
+        if(ctx.trials[ctx.trialNb+1].Participant === ctx.participantNb){
+          trial = ctx.trials[ctx.trialNb];
+          ctx.csvFile = ctx.csvFile +trial.Participant + "," + trial.Practice + "," + trial.Block + "," +trial.Trial+ "," + trial.O + "," +trial.V+ "," +ctx.trialTime + "," + ctx.errorNb + "\n";
+          console.log(ctx.csvFile);
+          ctx.errorNb = 0;
+          ctx.trialNb++;
+
+          startExperiment();
+
+        }else{
+          showEndMessage();
+          d3.selectAll("rect").remove();
+
+          var element = document.createElement('a');
+          element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(ctx.csvFile));
+          element.setAttribute('download', "result.csv");
+
+          element.style.display = 'none';
+          document.body.appendChild(element);
+          element.click();
+          document.body.removeChild(element);
+        }
+      }else{
+        ctx.errorNb++;
+        startExperiment();
+      }
+    }
+
+    d3.selectAll("rect")
+      .on("click",clicked);
   }
 
-  d3.selectAll("rect")
-    .transition()
-    .attr("rx",0)
-    .attr("ry",0)
-    .attr("width", 30)
-    .attr("height", 30)
-    .style("fill", "white");
 });
 
-var nextTrial = function() {
 
-  let trial = ctx.trials[ctx.trialNb];
-  console.log(trial);
 
-  let circleNb;
-  let otherCirclesColor;
-  let uniqCircleColor;
-  let otherCirclesSize;
-  let uniqCircleSize;
-
-  switch(trial.O) {
-    case "Low":
-      circleNb = 3;
-      break;
-    case "Medium":
-      circleNb = 7;
-      break;
-    case "Large":
-      circleNb = 10;
-      break;
-  }
-
-  switch(trial.V) {
-    case "Color":
-      rand = Math.round(Math.random());
-      otherCirclesColor = (rand==1)?"red":"color";
-      uniqCircleColor= (rand==1)?"black":"red";
-      rand = Math.round(Math.random());
-      uniqCircleSize = (rand==1)?40:20;
-      otherCirclesSize = (rand==1)?40:20;
-      break;
-    case "Size":
-      rand = Math.round(Math.random());
-      otherCirclesColor = (rand==1)?"red":"color";
-      uniqCircleColor= (rand==1)?"red":"black";
-      rand = Math.round(Math.random());
-      uniqCircleSize = (rand==1)?20:40;
-      otherCirclesSize = (rand==1)?40:20;
-      break;
-    case "Color&Size":
-      rand = Math.round(Math.random());
-      otherCirclesColor = (rand==1)?"red":"color";
-      uniqCircleColor= (rand==1)?"black":"red";
-      rand = Math.round(Math.random());
-      uniqCircleSize = (rand==1)?40:20;
-      otherCirclesSize = (rand==1)?20:40;
-      break;
-  }
+  var nextTrial = function() {
 
   d3.selectAll("rect").remove();
+  let trial = ctx.trials[ctx.trialNb];
+  d3.select('#participantSel').property('value', trial.Participant);
+  d3.select('#blockSel').property('value', trial.Block);
+  d3.select('#trialSel').property('value', trial.Trial);
 
-  for(let i=0; i<circleNb; i++){
-    let x = uniqCircleSize + Math.random()*(ctx.w-uniqCircleSize*2);
-    let y = uniqCircleSize + Math.random()*(ctx.h-uniqCircleSize*2);
+  setTimeout(() => {
+
+    let circleNb;
+    let otherCirclesColor;
+    let uniqCircleColor;
+    let otherCirclesSize;
+    let uniqCircleSize;
+
+    switch(trial.O) {
+      case "Low":
+        circleNb = 3;
+        break;
+      case "Medium":
+        circleNb = 7;
+        break;
+      case "Large":
+        circleNb = 10;
+        break;
+    }
+
+    switch(trial.V) {
+      case "Color":
+        rand = Math.round(Math.random());
+        otherCirclesColor = (rand==1)?"red":"color";
+        uniqCircleColor= (rand==1)?"black":"red";
+        rand = Math.round(Math.random());
+        uniqCircleSize = (rand==1)?40:20;
+        otherCirclesSize = (rand==1)?40:20;
+        break;
+      case "Size":
+        rand = Math.round(Math.random());
+        otherCirclesColor = (rand==1)?"red":"color";
+        uniqCircleColor= (rand==1)?"red":"black";
+        rand = Math.round(Math.random());
+        uniqCircleSize = (rand==1)?20:40;
+        otherCirclesSize = (rand==1)?40:20;
+        break;
+      case "Color&Size":
+        rand = Math.round(Math.random());
+        otherCirclesColor = (rand==1)?"red":"color";
+        uniqCircleColor= (rand==1)?"black":"red";
+        rand = Math.round(Math.random());
+        uniqCircleSize = (rand==1)?40:20;
+        otherCirclesSize = (rand==1)?20:40;
+        break;
+    }
+
+
+    for(let i=0; i<circleNb; i++){
+      let x = 100 + Math.random()*(ctx.w-100*2);
+      let y = 100 + Math.random()*(ctx.h-100*2);
+      d3.select("#mainScene")
+        .append("rect")
+        .style("stroke", "gray")
+        .style("fill", otherCirclesColor)
+        .attr("rx", otherCirclesSize)
+        .attr("ry", otherCirclesSize)
+        .attr("width", otherCirclesSize)
+        .attr("height", otherCirclesSize)
+        .attr("x", x)
+        .attr("y", y)
+        .attr("id","otherCircle");
+    }
+
+    let x = 100 + Math.random()*(ctx.w-100*2);
+    let y = 100 + Math.random()*(ctx.h-100*2);
+
     d3.select("#mainScene")
       .append("rect")
       .style("stroke", "gray")
-      .style("fill", otherCirclesColor)
-      .attr("rx", otherCirclesSize)
-      .attr("ry", otherCirclesSize)
-      .attr("width", otherCirclesSize)
-      .attr("height", otherCirclesSize)
+      .style("fill", uniqCircleColor)
+      .attr("rx", uniqCircleSize)
+      .attr("ry", uniqCircleSize)
+      .attr("height", uniqCircleSize)
+      .attr("width", uniqCircleSize)
       .attr("x", x)
-      .attr("y", y);
-  }
+      .attr("y", y)
+      .attr("id","uniqCircle");
 
-  let x = otherCirclesSize + Math.random()*(ctx.w-otherCirclesSize*2);
-  let y = otherCirclesSize + Math.random()*(ctx.h-otherCirclesSize*2);
-  d3.select("#mainScene")
-    .append("rect")
-    .style("stroke", "gray")
-    .style("fill", uniqCircleColor)
-    .attr("rx", uniqCircleSize)
-    .attr("ry", uniqCircleSize)
-    .attr("height", uniqCircleSize)
-    .attr("width", uniqCircleSize)
-    .attr("x", x)
-    .attr("y", y)
-    .attr("id","uniqCircle");
+      ctx.startTime = Date.now();
+      ctx.trialTime = 0;
 
-    startTime = Date.now();
-    interval = setInterval(function() {
-      var elapsedTime = Date.now() - startTime;
-      spottingTime = (elapsedTime / 1000);
-    }, 100);
-  
+    }, 1000);
+
+}
+
+var initExperiment = function(event){
+  ctx.participantNb = d3.select("#participantSel").property("value");
+  index = ctx.trials.findIndex(x => x.Participant === ctx.participantNb);
+  ctx.trialNb = index;
+  document.getElementById("goButton").style.display = "none";
+  document.getElementById("participantSel").disabled = true;
+  ctx.csvFile = ctx.csvFile + "Participant,Practice,Block,Trial,O,V,time,error\n"
 }
 
 var startExperiment = function(event) {
-  event.preventDefault();
-  
-  d3.selectAll('.instr').remove();
+  if(event)event.preventDefault();
 
+  d3.selectAll('.instr').remove();
 
   for(var i = 0; i < ctx.trials.length; i++) {
     if(ctx.trials[i][ctx.participantIndex] === ctx.participant) {
@@ -167,7 +238,8 @@ var startExperiment = function(event) {
 
   console.log("start experiment at "+ctx.cpt);
   nextTrial();
-  ctx.trialNb++;
+
+
 }
 
 var createScene = function(){

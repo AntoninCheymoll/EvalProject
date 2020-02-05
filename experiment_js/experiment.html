@@ -58,12 +58,12 @@ body {
         <select class="select" id="participantSel" onchange="onchangeParticipant()"></select>
 
         <span class="formLb">Block:</span>
-        <select class="select" id="blockSel" onchange="onchangeBlock()"></select>
+        <select disabled class="select" id="blockSel" onchange="onchangeBlock()"></select>
 
         <span class="formLb">Trial:</span>
-        <select class="select" id="trialSel" onchange="onchangeTrial()"></select>
+        <select disabled class="select" id="trialSel" onchange="onchangeTrial()"></select>
 
-        <button onclick="startExperiment(event)" onkeyup="ignore(event)">GO</button>
+        <button id="goButton" onclick="initExperiment(event),startExperiment(event)" onkeyup="ignore(event)">GO</button>
 
         </form>
 
