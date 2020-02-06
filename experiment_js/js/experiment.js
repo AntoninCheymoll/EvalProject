@@ -1,6 +1,6 @@
 var ctx = {
-  w: 1400,
-  h: 600,
+  w: 1100,
+  h: 500,
 
   trials: [],
   participant: "",
@@ -45,12 +45,7 @@ var showIntertitle = function() {
   d3.select("#instructions")
     .append('p')
     .classed('instr', true)
-    .html("1. Spot it as fast as possible and press <code>Space</code> bar;");
-
-  d3.select("#instructions")
-    .append('p')
-    .classed('instr', true)
-    .html("2. Click on the placeholder over that shape.");
+    .html("1. Spot it as fast as possible and press <code>Space</code> bar. <br>2. Click on the placeholder over that shape.");
 
   d3.select("#instructions")
     .append('p')
@@ -81,11 +76,9 @@ document.addEventListener('keydown', function(event) {
 
       if(d3.select(this).attr("id") === "uniqCircle"){
 
-
         if(ctx.trials[ctx.trialNb+1].Participant === ctx.participantNb){
           trial = ctx.trials[ctx.trialNb];
           ctx.csvFile = ctx.csvFile +trial.Participant + "," + trial.Practice + "," + trial.Block + "," +trial.Trial+ "," + trial.O + "," +trial.V+ "," +ctx.trialTime + "," + ctx.errorNb + "\n";
-          console.log(ctx.csvFile);
           ctx.errorNb = 0;
           ctx.trialNb++;
 
@@ -113,7 +106,6 @@ document.addEventListener('keydown', function(event) {
     d3.selectAll("rect")
       .on("click",clicked);
   }
-
 });
 
 
@@ -136,13 +128,13 @@ document.addEventListener('keydown', function(event) {
 
     switch(trial.O) {
       case "Low":
-        circleNb = 3;
+        circleNb = 6;
         break;
       case "Medium":
-        circleNb = 7;
+        circleNb = 15;
         break;
       case "Large":
-        circleNb = 10;
+        circleNb = 24;
         break;
     }
 
@@ -173,25 +165,51 @@ document.addEventListener('keydown', function(event) {
         break;
     }
 
+    let circleList = [];
 
     for(let i=0; i<circleNb; i++){
-      let x = 100 + Math.random()*(ctx.w-100*2);
-      let y = 100 + Math.random()*(ctx.h-100*2);
+
+      let position = returnNoneOverlappingPosition(circleList);
+      let x = position[0];
+      let y = position[1];
+      circleList.push([x,y]);
+
+      let color,size;
+      if(trial.V === "Color&Size"){
+
+        if(i/circleNb < 1/3){
+          color = otherCirclesColor;
+          size = otherCirclesSize;
+        }else if(i/circleNb < 2/3){
+          color = uniqCircleColor;
+          size = otherCirclesSize;
+        }else{
+          color = otherCirclesColor;
+          size = uniqCircleSize;
+        }
+      }else{
+        color = otherCirclesColor;
+        size = otherCirclesSize;
+      }
+      console.log(uniqCircleSize,otherCirclesSize);
+
       d3.select("#mainScene")
-        .append("rect")
-        .style("stroke", "gray")
-        .style("fill", otherCirclesColor)
-        .attr("rx", otherCirclesSize)
-        .attr("ry", otherCirclesSize)
-        .attr("width", otherCirclesSize)
-        .attr("height", otherCirclesSize)
-        .attr("x", x)
-        .attr("y", y)
-        .attr("id","otherCircle");
+          .append("rect")
+          .style("stroke", "gray")
+          .style("fill", color)
+          .attr("rx", size)
+          .attr("ry", size)
+          .attr("width", size)
+          .attr("height", size)
+          .attr("x", x)
+          .attr("y", y)
+          .attr("id","otherCircle");
+
     }
 
-    let x = 100 + Math.random()*(ctx.w-100*2);
-    let y = 100 + Math.random()*(ctx.h-100*2);
+    let position = returnNoneOverlappingPosition(circleList);
+    let x = position[0];
+    let y = position[1];
 
     d3.select("#mainScene")
       .append("rect")
@@ -211,6 +229,27 @@ document.addEventListener('keydown', function(event) {
     }, 1000);
 
 }
+
+var returnNoneOverlappingPosition = function(circleList){
+  let isOverlapping = true;
+  let x,y;
+
+  while(isOverlapping){
+    isOverlapping = false;
+    x = 50 + Math.random()*(ctx.w-(50)*2);
+    y = 50 + Math.random()*(ctx.h-50*2);
+
+    for(let pos of circleList){
+      let dist = Math.sqrt((x-pos[0])*(x-pos[0]) + (y-pos[1])*(y-pos[1]));
+      if(dist<50){
+        isOverlapping = true
+        break;
+      }
+    }
+  }
+  return [x,y];
+}
+
 
 var initExperiment = function(event){
   ctx.participantNb = d3.select("#participantSel").property("value");
