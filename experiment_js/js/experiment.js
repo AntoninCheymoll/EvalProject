@@ -76,7 +76,7 @@ document.addEventListener('keydown', function(event) {
 
       if(d3.select(this).attr("id") === "uniqCircle"){
 
-        if(ctx.trials[ctx.trialNb+1].Participant === ctx.participantNb){
+        if( ctx.trials[ctx.trialNb+1] && ctx.trials[ctx.trialNb+1].Participant === ctx.participantNb){
           trial = ctx.trials[ctx.trialNb];
           ctx.csvFile = ctx.csvFile +trial.Participant + "," + trial.Practice + "," + trial.Block + "," +trial.Trial+ "," + trial.O + "," +trial.V+ "," +ctx.trialTime + "," + ctx.errorNb + "\n";
           ctx.errorNb = 0;
